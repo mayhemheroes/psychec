@@ -2,4 +2,4 @@ project: psychec
 target: cnip
 
 cmds:
-  - cmd: /repo/build/cnip @@
+  - cmd: /cnip @@
