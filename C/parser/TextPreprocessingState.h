@@ -21,12 +21,17 @@
 #ifndef PSYCHE_C_TEXT_PREPROCESSING_STATE_H__
 #define PSYCHE_C_TEXT_PREPROCESSING_STATE_H__
 
+#include "API.h"
+
 #include <cstdint>
 
 namespace psy {
 namespace C {
 
-enum class TextPreprocessingState : std::uint8_t
+/**
+ * \brief The alternatives for the TextPreprocessingState of the parsed text.
+ */
+enum class PSY_C_API TextPreprocessingState : std::uint8_t
 {
     Unknown,
     Preprocessed,

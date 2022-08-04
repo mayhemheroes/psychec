@@ -37,8 +37,6 @@ class PSY_C_API SyntaxVisitor
 {
 public:
     SyntaxVisitor(const SyntaxTree* tree);
-    SyntaxVisitor(const SyntaxVisitor&) = delete;
-    void operator=(const SyntaxVisitor&) = delete;
     virtual ~SyntaxVisitor();
 
     /**
@@ -76,7 +74,7 @@ public:
     virtual Action visitIncompleteDeclaration(const IncompleteDeclarationSyntax*) { return Action::Visit; }
     virtual Action visitStructOrUnionDeclaration(const StructOrUnionDeclarationSyntax*) { return Action::Visit; }
     virtual Action visitEnumDeclaration(const EnumDeclarationSyntax*) { return Action::Visit; }
-    virtual Action visitEnumMemberDeclaration(const EnumMemberDeclarationSyntax*) { return Action::Visit; }
+    virtual Action visitEnumeratorDeclaration(const EnumeratorDeclarationSyntax*) { return Action::Visit; }
     virtual Action visitVariableAndOrFunctionDeclaration(const VariableAndOrFunctionDeclarationSyntax*) { return Action::Visit; }
     virtual Action visitFieldDeclaration(const FieldDeclarationSyntax*) { return Action::Visit; }
     virtual Action visitParameterDeclaration(const ParameterDeclarationSyntax*) { return Action::Visit; }
@@ -118,7 +116,6 @@ public:
     virtual Action visitDesignatedInitializer(const DesignatedInitializerSyntax*) { return Action::Visit; }
     virtual Action visitFieldDesignator(const FieldDesignatorSyntax*) { return Action::Visit; }
     virtual Action visitArrayDesignator(const ArrayDesignatorSyntax*) { return Action::Visit; }
-
     virtual Action visitOffsetOfDesignator(const OffsetOfDesignatorSyntax*) { return Action::Visit; }
 
     //-------------//
@@ -186,6 +183,10 @@ public:
     virtual Action visitAmbiguousExpressionOrDeclarationStatement(const AmbiguousExpressionOrDeclarationStatementSyntax*) { return Action::Visit; }
 
 protected:
+    // Unavailable.
+    SyntaxVisitor(const SyntaxVisitor&) = delete;
+    void operator=(const SyntaxVisitor&) = delete;
+
     const SyntaxTree* tree_;
 };
 

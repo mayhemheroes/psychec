@@ -25,6 +25,7 @@
 #include "Fwds.h"
 
 #include "../common/infra/Assertions.h"
+#include "../common/infra/Escape.h"
 
 #include <cstdint>
 #include <string>
@@ -35,9 +36,11 @@ namespace C {
 /**
  * \brief The ValueKind enum.
  */
-enum class ValueKind : std::uint8_t
+enum class PSY_C_API ValueKind : std::uint8_t
 {
     UNSPECIFIED = 0,
+
+    Enumerator,
     Field,
     Parameter,
     Variable
@@ -46,6 +49,8 @@ enum class ValueKind : std::uint8_t
 inline std::string PSY_C_API to_string(ValueKind valK)
 {
     switch (valK) {
+        case ValueKind::Enumerator:
+            return "Enumerator";
         case ValueKind::Field:
             return "Field";
         case ValueKind::Parameter:
@@ -53,8 +58,7 @@ inline std::string PSY_C_API to_string(ValueKind valK)
         case ValueKind::Variable:
             return "Variable";
         default:
-            PSY_ESCAPE_VIA_RETURN("");
-            return "<INVALID or UNSPECIFIED ValueKind>";
+            PSY_ESCAPE_VIA_RETURN("<INVALID or UNSPECIFIED ValueKind>");
     }
 }
 

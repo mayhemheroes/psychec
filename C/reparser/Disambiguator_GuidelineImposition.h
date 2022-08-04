@@ -1,4 +1,4 @@
-// Copyright (c) 2020/21/22 Leandro T. C. Melo <ltcmelo@gmail.com>
+// Copyright (c) 2022 Leandro T. C. Melo <ltcmelo@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "ParserTest.h"
+#ifndef PSYCHE_C_GUIDELINE_IMPOSITION_DISAMBIGUATOR_H__
+#define PSYCHE_C_GUIDELINE_IMPOSITION_DISAMBIGUATOR_H__
 
-using namespace psy;
-using namespace C;
+#include "API.h"
 
-const std::string ParserTest::Name = "PARSER";
+#include "syntax/SyntaxVisitor.h"
 
-void ParserTest::testAll()
+namespace psy {
+namespace C {
+
+class PSY_C_NON_API GuidelineImpositionReparser : public SyntaxVisitor
 {
-    return run<ParserTest>(tests_);
-}
+public:
+    GuidelineImpositionReparser(SyntaxTree* tree);
+};
 
-void ParserTest::setUp()
-{}
+} // C
+} // psy
 
-void ParserTest::tearDown()
-{
-}
+#endif

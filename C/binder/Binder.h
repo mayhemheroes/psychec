@@ -32,6 +32,7 @@
 #include "syntax/SyntaxVisitor.h"
 
 #include "../common/diagnostics/DiagnosticDescriptor.h"
+#include "../common/infra/InternalAccess.h"
 
 #include <memory>
 #include <stack>
@@ -46,24 +47,26 @@ class SemanticModel;
 /**
  * \brief The Binder class.
  */
-class PSY_C_API Binder final : protected SyntaxVisitor
+class PSY_C_NON_API Binder final : protected SyntaxVisitor
 {
-    friend class BinderTest;
-    friend class SemanticModel;
-    friend class ConstraintsInDeclarations;
-    friend class ConstraintsInTypeSpecifiers;
-    friend class ConstraintsInDeclarators;
-    friend class SemanticsOfTypeQualifiers;
+    friend class BinderTester;
 
-public:
-    Binder(const Binder&) = delete;
-    void operator=(const Binder&) = delete;
+PSY_INTERNAL_AND_RESTRICTED:
+    PSY_GRANT_ACCESS(SemanticModel);
+    PSY_GRANT_ACCESS(ConstraintsInDeclarations);
+    PSY_GRANT_ACCESS(ConstraintsInTypeSpecifiers);
+    PSY_GRANT_ACCESS(ConstraintsInDeclarators);
+    PSY_GRANT_ACCESS(SemanticsOfTypeQualifiers);
+
+    Binder(SemanticModel* semaModel, const SyntaxTree* tree);
     ~Binder();
 
     void bind();
 
 private:
-    Binder(SemanticModel* semaModel, const SyntaxTree* tree);
+    // Unavailable
+    Binder(const Binder&) = delete;
+    void operator=(const Binder&) = delete;
 
     SemanticModel* semaModel_;
 
@@ -74,7 +77,7 @@ private:
     std::stack<Scope*> scopes_;
     Scope* stashedScope_;
 
-    template <class SymT> SymT* pushSym(std::unique_ptr<SymT>);
+    template <class SymT> SymT* pushSym(const SyntaxNode* node, std::unique_ptr<SymT>);
     void popSym();
     using SymContT = std::stack<Symbol*>;
     SymContT syms_;
@@ -86,9 +89,9 @@ private:
 
     std::stack<FunctionTypeSymbol*> pendingFunTySyms_;
 
-    template <class SymT, class... Args> std::unique_ptr<SymT> makeSymOrTySym(Args... args);
-    template <class SymT, class... Args> void makeSymAndPushIt(Args... arg);
-    template <class SymT, class... Args> void makeTySymAndPushIt(Args... arg);
+    template <class SymT, class... SymTArgs> std::unique_ptr<SymT> makeSymOrTySym(SymTArgs... args);
+    template <class SymT, class... SymTArgs> void makeSymAndPushIt(const SyntaxNode* node, SymTArgs... arg);
+    template <class SymT, class... SymTArgs> void makeTySymAndPushIt(SymTArgs... arg);
 
     struct DiagnosticsReporter
     {
@@ -108,7 +111,7 @@ private:
     virtual Action visitIncompleteDeclaration(const IncompleteDeclarationSyntax*) override;
     virtual Action visitStaticAssertDeclaration(const StaticAssertDeclarationSyntax*) override;
 
-    template <class TyDeclT> Action visitTypeDeclaration_AtSpecfierMembers_COMMON(
+    template <class TyDeclT> Action visitTypeDeclaration_AtInternalDeclarations_COMMON(
             const TyDeclT* node,
             Action (Binder::*visit_DONE)(const TyDeclT*));
 
@@ -136,6 +139,11 @@ private:
     Action visitFieldDeclaration_AtDeclarators(const FieldDeclarationSyntax*);
     Action visitFieldDeclaration_DONE(const FieldDeclarationSyntax*);
 
+    virtual Action visitEnumeratorDeclaration(const EnumeratorDeclarationSyntax*) override;
+    Action visitEnumeratorDeclaration_AtImplicitSpecifier(const EnumeratorDeclarationSyntax*);
+    Action visitEnumeratorDeclaration_AtDeclarator(const EnumeratorDeclarationSyntax*);
+    Action visitEnumeratorDeclaration_DONE(const EnumeratorDeclarationSyntax*);
+
     virtual Action visitParameterDeclaration(const ParameterDeclarationSyntax*) override;
     Action visitParameterDeclaration_AtSpecifiers(const ParameterDeclarationSyntax*);
     Action visitParameterDeclaration_AtDeclarator(const ParameterDeclarationSyntax*);
@@ -147,16 +155,15 @@ private:
     Action visitFunctionDefinition_DONE(const FunctionDefinitionSyntax*);
 
     /* Specifiers */
-    Action actOnTypeSpecifier(const SpecifierSyntax*);
-    Action actOnTypeQualifier(const SpecifierSyntax*);
     virtual Action visitBuiltinTypeSpecifier(const BuiltinTypeSpecifierSyntax*) override;
     virtual Action visitTagTypeSpecifier(const TagTypeSpecifierSyntax*) override;
     virtual Action visitTypeDeclarationAsSpecifier(const TypeDeclarationAsSpecifierSyntax*) override;
     virtual Action visitTypedefName(const TypedefNameSyntax*) override;
     virtual Action visitTypeQualifier(const TypeQualifierSyntax*) override;
+    Action visitIfNotTypeQualifier(const SpecifierSyntax*);
+    Action visitIfTypeQualifier(const SpecifierSyntax*);
 
     /* Declarators */
-    Action actOnDeclarator(const DeclaratorSyntax*);
     virtual Action visitArrayOrFunctionDeclarator(const ArrayOrFunctionDeclaratorSyntax*) override;
     virtual Action visitPointerDeclarator(const PointerDeclaratorSyntax*) override;
     virtual Action visitParenthesizedDeclarator(const ParenthesizedDeclaratorSyntax*) override;
@@ -164,8 +171,10 @@ private:
     virtual Action visitParameterSuffix(const ParameterSuffixSyntax*) override;
     virtual Action visitIdentifierDeclarator(const IdentifierDeclaratorSyntax*) override;
     virtual Action visitAbstractDeclarator(const AbstractDeclaratorSyntax*) override;
-    TypeClass_TypeableSymbol* typeableSymForDeclarator();
-    TypeClass_NameableSymbol* nameableSymForIdentifierOrAbstractDeclarator();
+    Action nameSymAtTop(const char* s);
+    Action typeSymAtTopAndPopIt();
+
+    template <class DecltrT> Action determineContextAndMakeSym(const DecltrT* node);
 
     //------------//
     // Statements //
@@ -174,27 +183,27 @@ private:
     virtual Action visitDeclarationStatement(const DeclarationStatementSyntax*) override;
 };
 
-template <class SymT, class... Args>
-std::unique_ptr<SymT> Binder::makeSymOrTySym(Args... args)
+template <class SymT, class... SymTArgs>
+std::unique_ptr<SymT> Binder::makeSymOrTySym(SymTArgs... args)
 {
     std::unique_ptr<SymT> sym(new SymT(tree_,
                                        scopes_.top(),
                                        syms_.top(),
-                                       std::forward<Args>(args)...));
+                                       std::forward<SymTArgs>(args)...));
     return sym;
 }
 
-template <class SymT, class... Args>
-void Binder::makeSymAndPushIt(Args... args)
+template <class SymT, class... SymTArgs>
+void Binder::makeSymAndPushIt(const SyntaxNode* node, SymTArgs... args)
 {
-    std::unique_ptr<SymT> sym = makeSymOrTySym<SymT>(std::forward<Args>(args)...);
-    pushSym(std::move(sym));
+    std::unique_ptr<SymT> sym = makeSymOrTySym<SymT>(std::forward<SymTArgs>(args)...);
+    pushSym(node, std::move(sym));
 }
 
-template <class SymT, class... Args>
-void Binder::makeTySymAndPushIt(Args... args)
+template <class SymT, class... SymTArgs>
+void Binder::makeTySymAndPushIt(SymTArgs... args)
 {
-    std::unique_ptr<SymT> sym = makeSymOrTySym<SymT>(std::forward<Args>(args)...);
+    std::unique_ptr<SymT> sym = makeSymOrTySym<SymT>(std::forward<SymTArgs>(args)...);
     pushTySym(std::move(sym));
 }
 

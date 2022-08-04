@@ -25,11 +25,13 @@
 #include "API.h"
 #include "Fwds.h"
 
-#include "LexedTokens.h"
 #include "SyntaxTree.h"
+#include "LexedTokens.h"
 
 #include "infra/MemoryPool.h"
 #include "syntax/SyntaxToken.h"
+
+#include "../common/infra/InternalAccess.h"
 
 #include <cstdint>
 #include <functional>
@@ -46,21 +48,27 @@ class Lexer;
 /**
  * \brief The C Parser class.
  */
-class PSY_C_API Parser
+class PSY_C_NON_API Parser
 {
+    friend class ParserTester;
+
 public:
-    Parser(const Parser&) = delete;
-    void operator=(const Parser&) = delete;
     ~Parser();
+
+PSY_INTERNAL_AND_RESTRICTED:
+    PSY_GRANT_ACCESS(SyntaxTree);
+    PSY_GRANT_ACCESS(DebugRule);
+
+    Parser(SyntaxTree* tree);
 
     TranslationUnitSyntax* parse();
 
-private:
-    Parser(SyntaxTree* tree);
+    bool detectedAnyAmbiguity() const;
 
-    friend class SyntaxTree;
-    friend class DebugRule;
-    friend class ParserTest;
+private:
+    // Unavailable
+    Parser(const Parser&) = delete;
+    void operator=(const Parser&) = delete;
 
     MemoryPool* pool_;
     SyntaxTree* tree_;
@@ -90,16 +98,19 @@ private:
     {
         DiagnosticsReporter(Parser* parser)
             : parser_(parser)
-            , delayReports_(false)
+            , IDsForDelay_(false)
         {}
         Parser* parser_;
 
-        std::unordered_set<std::string> delayReports_;
-        std::vector<std::pair<DiagnosticDescriptor, LexedTokens::IndexType>> delayed_;
-        void reportDelayed();
-
         static std::string joinTokenNames(const std::vector<SyntaxKind>& validTkKinds);
+
+        std::unordered_set<std::string> IDsForDelay_;
+        std::vector<std::pair<DiagnosticDescriptor, LexedTokens::IndexType>> delayedDiags_;
+        std::vector<std::pair<DiagnosticDescriptor, LexedTokens::IndexType>> retainedAmbiguityDiags_;
+
         void diagnose(DiagnosticDescriptor&& desc);
+        void diagnoseDelayed();
+        void diagnoseAmbiguityButRetainIt(DiagnosticDescriptor&& desc);
 
         /* General */
         void ExpectedFeature(const std::string& name);
@@ -174,8 +185,23 @@ private:
         static const std::string ID_of_UnexpectedContinueOutsideLoop;
         static const std::string ID_of_UnexpectedBreakOutsideSwitchOrLoop;
         static const std::string ID_of_UnexpectedGNUExtensionFlag;
+
+        /* Ambiguities */
+        void AmbiguousTypeNameOrExpressionAsTypeReference();
+        void AmbiguousCastOrBinaryExpression();
+        void AmbiguousExpressionOrDeclarationStatement();
+
+        static const std::string ID_of_AmbiguousTypeNameOrExpressionAsTypeReference;
+        static const std::string ID_of_AmbiguousCastOrBinaryExpression;
+        static const std::string ID_of_AmbiguousExpressionOrDeclarationStatement;
     };
     friend struct DiagnosticsReporter;
+
+    DiagnosticsReporter diagReporter_;
+
+    std::vector<
+        std::pair<DiagnosticDescriptor,
+                  LexedTokens::IndexType>> releaseRetainedAmbiguityDiags() const;
 
     struct DiagnosticsReporterDelayer
     {
@@ -184,12 +210,12 @@ private:
             : diagReporter_(diagReporter)
             , diagID_(diagID)
         {
-            diagReporter_->delayReports_.insert(diagID);
+            diagReporter_->IDsForDelay_.insert(diagID);
         }
 
         ~DiagnosticsReporterDelayer()
         {
-            diagReporter_->delayReports_.erase(diagID_);
+            diagReporter_->IDsForDelay_.erase(diagID_);
         }
 
         DiagnosticsReporter* diagReporter_;
@@ -201,12 +227,10 @@ private:
     bool match(SyntaxKind expectedTkK, LexedTokens::IndexType* tkIdx);
     bool matchOrSkipTo(SyntaxKind expectedTkK, LexedTokens::IndexType* tkIdx);
     void skipTo(SyntaxKind tkK);
-
-    DiagnosticsReporter diagReporter_;
     unsigned int curTkIdx_;
 
-    int depthOfExprs_;
-    int depthOfStmts_;
+    int DEPTH_OF_EXPRS_;
+    int DEPTH_OF_STMTS_;
 
     struct DepthControl
     {

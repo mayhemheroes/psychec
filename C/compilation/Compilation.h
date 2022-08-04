@@ -26,6 +26,7 @@
 #include "Fwds.h"
 #include "SyntaxTree.h"
 
+#include "../common/infra/InternalAccess.h"
 #include "../common/infra/Pimpl.h"
 
 #include <string>
@@ -45,9 +46,9 @@ class SemanticModel;
  */
 class PSY_C_API Compilation
 {
+    friend class InternalsTestSuite;
+
 public:
-    Compilation(const Compilation&) = delete;
-    Compilation& operator=(const Compilation&) = delete;
     ~Compilation();
 
     /**
@@ -71,24 +72,28 @@ public:
     void addSyntaxTrees(std::vector<const SyntaxTree*> trees);
 
     /**
-     * The SyntaxTree associated to \c this Compilation.
+     * The SyntaxTrees in \c this Compilation.
      */
-    std::vector<const SyntaxTree*> syntaxTree() const;
+    std::vector<const SyntaxTree*> syntaxTrees() const;
 
     /**
-     * The SemanticModel associated to the SyntaxTree \p tree of \c this Compilation.
+     * The SemanticModel for the SyntaxTree \p tree in \c this Compilation.
      */
     const SemanticModel* semanticModel(const SyntaxTree* tree) const;
 
-private:
-    DECL_PIMPL(Compilation);
-
-    friend class SemanticModel;
-    friend class BinderTest;
-
-    Compilation();
+PSY_INTERNAL_AND_RESTRICTED:
+    PSY_GRANT_ACCESS(SemanticModel);
 
     Assembly* assembly();
+
+private:
+    Compilation();
+
+    // Unavailable
+    Compilation(const Compilation&) = delete;
+    Compilation& operator=(const Compilation&) = delete;
+
+    DECL_PIMPL(Compilation);
 };
 
 } // C

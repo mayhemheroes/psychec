@@ -1,4 +1,4 @@
-// Copyright (c) 2020/21/22 Leandro T. C. Melo <ltcmelo@gmail.com>
+// Copyright (c) 2022 Leandro T. C. Melo <ltcmelo@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,49 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PSYCHE_C_TEST_H__
-#define PSYCHE_C_TEST_H__
+#include "ValueSymbol_Enumerator.h"
 
-#include "API.h"
+#include "symbols/Symbol_ALL.h"
+#include "binder/Scope.h"
 
-#include "TestExpectation.h"
+#include <sstream>
 
-#include "C/SyntaxTree.h"
-#include "tests/TestRunner.h"
+using namespace psy;
+using namespace C;
 
-#define CROSS_REFERENCE_TEST(CASE) { auto x = &CASE; (void)x; } \
+EnumeratorSymbol::EnumeratorSymbol(const SyntaxTree* tree,
+                                   const Scope* scope,
+                                   const Symbol* containingSym)
+    : ValueSymbol(tree,
+                  scope,
+                  containingSym,
+                  ValueKind::Enumerator)
+{}
 
 namespace psy {
 namespace C {
 
-class Test : public TestRunner
+std::string to_string(const EnumeratorSymbol& sym)
 {
-public:
-    virtual ~Test();
+    std::ostringstream oss;
+    oss << "{^enumerator |";
+    oss << " " << (sym.name() ? to_string(*sym.name()) : "name:NULL");
+    oss << " " << (sym.type() ? to_string(*sym.type()) : "type:NULL");
+    oss << " " << (sym.scope() ? to_string(sym.scope()->kind()) : "scope:NULL");
+    oss << " ^}";
 
-protected:
-    Test();
-
-    bool checkErrorAndWarn(Expectation X);
-
-    void parse(std::string text,
-               Expectation X = Expectation(),
-               SyntaxTree::SyntaxCategory cat = SyntaxTree::SyntaxCategory::Unspecified);
-    void parseDeclaration(std::string text,
-                          Expectation X = Expectation());
-    void parseExpression(std::string text,
-                         Expectation X = Expectation());
-    void parseStatement(std::string text,
-                        Expectation X = Expectation());
-
-    virtual void bind(std::string text,
-                      Expectation X = Expectation()) {}
-
-    std::unique_ptr<SyntaxTree> tree_;
-    std::unique_ptr<Compilation> compilation_;
-};
+    return oss.str();
+}
 
 } // C
-} // psy
-
-#endif
+} // psi

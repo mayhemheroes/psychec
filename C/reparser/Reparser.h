@@ -1,4 +1,4 @@
-// Copyright (c) 2020/21/22 Leandro T. C. Melo <ltcmelo@gmail.com>
+// Copyright (c) 2022 Leandro T. C. Melo <ltcmelo@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,53 +18,47 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PSYCHE_C_TYPE_CHECKER_TEST_H__
-#define PSYCHE_C_TYPE_CHECKER_TEST_H__
+#ifndef PSYCHE_C_DISAMBIGUATOR_H__
+#define PSYCHE_C_DISAMBIGUATOR_H__
 
-#include "Test.h"
+#include "API.h"
+#include "Fwds.h"
 
-#define TEST_TYPE_CHECKER(Function) TestFunction { &TypeCheckerTest::Function, #Function }
+#include "parser/ParseOptions.h"
+
+#include "../common/infra/InternalAccess.h"
+
+#include <cstdint>
 
 namespace psy {
 namespace C {
 
-class TypeCheckerTest final : public Test
+class PSY_C_NON_API Reparser
 {
-public:
-    static const std::string Name;
+PSY_INTERNAL_AND_RESTRICTED:
+    PSY_GRANT_ACCESS(SyntaxTree);
+    PSY_GRANT_ACCESS(InternalsTestSuite);
 
-    virtual std::string name() const override { return Name; }
+    Reparser();
 
-    void testAll() override;
+    enum class DisambiguationStrategy : std::uint8_t
+    {
+        UNSPECIFIED = 0,
 
-    void case0001();
-    void case0002();
-    void case0003();
-    void case0004();
-    void case0005();
-    void case0006();
-    void case0007();
-    void case0008();
-    void case0009();
+        TypeSynonymsVerification,
+        SyntaxCorrelation,
+        GuidelineImposition
+    };
+
+    void setDisambiguationStrategy(DisambiguationStrategy strategy);
+
+    void setPermitHeuristic(bool heuristic);
+
+    void reparse(SyntaxTree* tree);
 
 private:
-    using TestFunction = std::pair<std::function<void(TypeCheckerTest*)>, const char*>;
-
-    void setUp() override;
-    void tearDown() override;
-
-    std::vector<TestFunction> tests_
-    {
-        TEST_TYPE_CHECKER(case0001),
-        TEST_TYPE_CHECKER(case0002),
-        TEST_TYPE_CHECKER(case0003),
-        TEST_TYPE_CHECKER(case0004),
-        TEST_TYPE_CHECKER(case0005),
-        TEST_TYPE_CHECKER(case0006),
-        TEST_TYPE_CHECKER(case0007),
-        TEST_TYPE_CHECKER(case0008),
-        TEST_TYPE_CHECKER(case0009)
-    };
+    DisambiguationStrategy disambigStrategy_;
+    bool permitHeuristic_;
 };
 
 } // C

@@ -55,8 +55,6 @@ class PSY_C_API SyntaxNode : public Managed
 {
 public:
     virtual ~SyntaxNode();
-    SyntaxNode(const SyntaxNode& other) = delete;
-    SyntaxNode& operator=(const SyntaxNode& other) = delete;
 
     /**
      * The SyntaxTree to which \c this SyntaxNode belongs to.
@@ -128,8 +126,8 @@ public:
     virtual const StructOrUnionDeclarationSyntax* asStructOrUnionDeclaration() const { return nullptr; }
     virtual EnumDeclarationSyntax* asEnumDeclaration() { return nullptr; }
     virtual const EnumDeclarationSyntax* asEnumDeclaration() const { return nullptr; }
-    virtual EnumMemberDeclarationSyntax* asEnumMemberDeclaration() { return nullptr; }
-    virtual const EnumMemberDeclarationSyntax* asEnumMemberDeclaration() const { return nullptr; }
+    virtual EnumeratorDeclarationSyntax* asEnumeratorDeclaration() { return nullptr; }
+    virtual const EnumeratorDeclarationSyntax* asEnumeratorDeclaration() const { return nullptr; }
     virtual ValueDeclarationSyntax* asValueDeclaration() { return nullptr; }
     virtual const ValueDeclarationSyntax* asValueDeclaration() const { return nullptr; }
     virtual DeclaratorDeclarationSyntax* asDeclaratorDeclaration() { return nullptr; }
@@ -350,6 +348,10 @@ public:
 
 protected:
     SyntaxNode(SyntaxTree* tree, SyntaxKind kind = Error);
+
+    // Unavailable
+    SyntaxNode(const SyntaxNode& other) = delete;
+    SyntaxNode& operator=(const SyntaxNode& other) = delete;
 
     SyntaxToken tokenAtIndex(LexedTokens::IndexType tkIdx) const;
     SyntaxToken findValidToken(const std::vector<SyntaxHolder>& syntaxHolders) const;

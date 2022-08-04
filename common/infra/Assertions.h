@@ -22,22 +22,25 @@
 #define PSYCHE_ASSERTIONS_H__
 
 #include <iostream>
+#include <stdexcept>
 
 #ifndef NDEBUG
     #define PSY_ASSERT_W_MSG(COND_EXPR, STMT, MSG) \
-do { \
-    if (COND_EXPR) {} \
-    else { \
-        std::cout << "[ASSERT] at " \
-                  << __FILE__ << ":" << __LINE__ << " " \
-                  << MSG << std::endl; \
-        STMT; \
-    } \
-} while (0)
+        do { \
+            if (COND_EXPR) {} \
+            else { \
+                std::cout << "[ASSERT] at " \
+                          << __FILE__ << ":" << __LINE__ << " " \
+                          << MSG << std::endl; \
+                STMT; \
+            } \
+        } while (0)
     #define PSY_ASSERT(COND_EXPR, STMT) PSY_ASSERT_W_MSG(COND_EXPR, STMT, "<empty message>")
+    #define PSY_ASSERT_NO_STMT(COND_EXPR) PSY_ASSERT_W_MSG(COND_EXPR, {}, "<empty message>")
 #else
     #define PSY_ASSERT_W_MSG(COND_EXPR, STMT, MSG)
     #define PSY_ASSERT(COND_EXPR, STMT)
+    #define PSY_ASSERT_NO_STMT(COND_EXPR)
 #endif
 
 #endif

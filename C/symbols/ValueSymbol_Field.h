@@ -27,7 +27,7 @@ namespace psy {
 namespace C {
 
 /**
- * \brief The FieldUnitSymbol class.
+ * \brief The FieldSymbol class.
  *
  * \note
  * This API is inspired by that of \c Microsoft.CodeAnalysis.IFieldSymbol
@@ -36,11 +36,16 @@ namespace C {
 class PSY_C_API FieldSymbol final : public ValueSymbol
 {
 public:
+    //!@{
+    /**
+     * Cast \c this ValueSymbol as a FieldSymbol.
+     */
     virtual FieldSymbol* asField() override { return this; }
     virtual const FieldSymbol* asField() const override { return this; }
+    //!@}
 
-private:
-    friend class Binder;
+PSY_INTERNAL_AND_RESTRICTED:
+    PSY_GRANT_ACCESS(Binder);
 
     FieldSymbol(const SyntaxTree* tree,
                 const Scope* scope,

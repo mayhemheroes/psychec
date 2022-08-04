@@ -18,28 +18,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PSYCHE_C_BINDER_TEST_H__
-#define PSYCHE_C_BINDER_TEST_H__
+#ifndef PSYCHE_C_BINDER_TESTER_H__
+#define PSYCHE_C_BINDER_TESTER_H__
 
-#include "Test.h"
-#include "C/Fwds.h"
+#include "Fwds.h"
+#include "TestSuite_Internals.h"
+#include "tests/Tester.h"
 
-#define TEST_BINDER(Function) TestFunction { &BinderTest::Function, #Function }
+#define TEST_BINDER(Function) TestFunction { &BinderTester::Function, #Function }
 
 namespace psy {
 namespace C {
 
-class BinderTest final : public Test
+class BinderTester final : public Tester
 {
 public:
+    BinderTester(TestSuite* suite)
+        : Tester(suite)
+    {}
+
     static const std::string Name;
-
     virtual std::string name() const override { return Name; }
+    void setUp() override;
+    void tearDown() override;
 
-    void testAll() override;
+    void testBinder();
 
-    virtual void bind(std::string text,
-                      Expectation X = Expectation()) override;
+    void bind(std::string text, Expectation X = Expectation());
+
+    using TestFunction = std::pair<std::function<void(BinderTester*)>, const char*>;
 
     /*
         Functions
@@ -79,8 +86,8 @@ public:
             + 2350-2399 -> arrays of objects of qualified type
 
         Types
-            + 0000-0049 -> structures and unions
-            + 0050-0099 -> enumerations (and enumerators)
+            + 3000-0049 -> structures and unions
+            + 3050-0099 -> enumerations (and enumerators)
      */
 
     void case0001();
@@ -2207,15 +2214,6 @@ public:
     void case3597();
     void case3598();
     void case3599();
-
-
-private:
-    using TestFunction = std::pair<std::function<void(BinderTest*)>, const char*>;
-
-    void setUp() override;
-    void tearDown() override;
-
-    void f();
 
     std::vector<TestFunction> tests_
     {

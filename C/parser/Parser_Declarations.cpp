@@ -62,7 +62,7 @@ void Parser::parseTranslationUnit(TranslationUnitSyntax*& unit)
         declList_cur = &(*declList_cur)->next;
     }
 
-    diagReporter_.reportDelayed();
+    diagReporter_.diagnoseDelayed();
 }
 
 /**
@@ -266,7 +266,7 @@ bool Parser::parseDeclarationOrFunctionDefinition_AtFollowOfSpecifiers(
         InitializerSyntax** init = nullptr;
         if (peek().kind() == EqualsToken) {
             DeclaratorSyntax* stripDecltor = const_cast<DeclaratorSyntax*>(
-                    SyntaxUtilities::strippedDeclarator(decltor));
+                    SyntaxUtilities::strippedDeclaratorOrSelf(decltor));
             switch (stripDecltor->kind()) {
                 case IdentifierDeclarator: {
                     auto identDecltor = stripDecltor->asIdentifierDeclarator();
@@ -293,7 +293,7 @@ bool Parser::parseDeclarationOrFunctionDefinition_AtFollowOfSpecifiers(
                     auto funcDecltor = stripDecltor->asArrayOrFunctionDeclarator();
                     if (funcDecltor->innerDecltor_) {
                         auto stripInnerDecltor = const_cast<DeclaratorSyntax*>(
-                                    SyntaxUtilities::strippedDeclarator(funcDecltor->innerDecltor_));
+                                    SyntaxUtilities::strippedDeclaratorOrSelf(funcDecltor->innerDecltor_));
                         if (stripInnerDecltor->kind() == PointerDeclarator) {
                             funcDecltor->equalsTkIdx_ = consume();
                             init = &funcDecltor->init_;
@@ -341,7 +341,7 @@ bool Parser::parseDeclarationOrFunctionDefinition_AtFollowOfSpecifiers(
                 if (parseExtKR_ParameterDeclarationList(paramKRList)) {
                     BT.discard();
                     if (parseFunctionDefinition_AtOpenBrace(decl, specList, decltor, paramKRList)) {
-                        diagReporter_.delayed_.clear();
+                        diagReporter_.delayedDiags_.clear();
                         return true;
                     }
                     return false;
@@ -370,14 +370,14 @@ bool Parser::parseFunctionDefinition_AtOpenBrace(
 
     const DeclaratorSyntax* prevDecltor = nullptr;
     const DeclaratorSyntax* outerDecltor =
-            SyntaxUtilities::strippedDeclarator(decltor);
+            SyntaxUtilities::strippedDeclaratorOrSelf(decltor);
     while (outerDecltor) {
         const DeclaratorSyntax* innerDecltor =
-                SyntaxUtilities::innerDeclarator(outerDecltor);
+                SyntaxUtilities::innerDeclaratorOrSelf(outerDecltor);
         if (innerDecltor == outerDecltor)
             break;
         prevDecltor = outerDecltor;
-        outerDecltor = SyntaxUtilities::strippedDeclarator(innerDecltor);
+        outerDecltor = SyntaxUtilities::strippedDeclaratorOrSelf(innerDecltor);
     }
 
     if (prevDecltor
@@ -652,11 +652,11 @@ bool Parser::parseEnumerator(DeclarationSyntax*& decl)
 {
     DEBUG_THIS_RULE();
 
-    EnumMemberDeclarationSyntax* enumMembDecl = nullptr;
+    EnumeratorDeclarationSyntax* enumMembDecl = nullptr;
 
     switch (peek().kind()) {
         case IdentifierToken: {
-            enumMembDecl = makeNode<EnumMemberDeclarationSyntax>();
+            enumMembDecl = makeNode<EnumeratorDeclarationSyntax>();
             decl = enumMembDecl;
             enumMembDecl->identTkIdx_ = consume();
             break;

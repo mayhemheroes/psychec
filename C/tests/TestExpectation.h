@@ -25,12 +25,13 @@
 #include "binder/NameSpaceKind.h"
 #include "binder/Scope.h"
 #include "symbols/SymbolNameKind.h"
+#include "symbols/SymbolName_Tag.h"
 #include "symbols/SymbolKind.h"
 #include "symbols/ValueKind.h"
 #include "symbols/TypeKind.h"
 #include "symbols/TypeKind_Builtin.h"
 #include "symbols/TypeKind_Named.h"
-#include "tests/TestRunner.h"
+#include "tests/TestSuite.h"
 
 #include <functional>
 #include <memory>
@@ -105,7 +106,7 @@ struct DeclSummary
     DeclSummary& withScopeKind(ScopeKind scopeK);
     DeclSummary& withNameSpaceKind(NameSpaceKind nsK);
     DeclSummary& withNameKind(SymbolNameKind nameK);
-    DeclSummary& withTagKind(TagSymbolNameKind tagK);
+    DeclSummary& withTagChoice(TagSymbolName::TagChoice tagChoice);
 
     std::string name_;
     SymbolKind symK_;
@@ -115,7 +116,7 @@ struct DeclSummary
     ScopeKind scopeK_;
     NameSpaceKind nsK_;
     SymbolNameKind nameK_;
-    TagSymbolNameKind tagK_;
+    TagSymbolName::TagChoice tagChoice_;
 
     TypeSpecSummary TySpec;
 };
@@ -141,9 +142,12 @@ struct Expectation
     bool continueTestDespiteOfErrors_;
     Expectation& ContinueTestDespiteOfErrors();
 
-    bool isAmbiguous_;
+    bool containsAmbiguity_;
     std::string ambiguityText_;
     Expectation& ambiguity(std::string s = "");
+
+    bool unfinishedParse_;
+    Expectation& unfinishedParse();
 
     std::vector<SyntaxKind> syntaxKinds_;
     Expectation& AST(std::vector<SyntaxKind>&& v);

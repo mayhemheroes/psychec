@@ -27,10 +27,11 @@ namespace psy {
 
 enum class DiagnosticCategory : char
 {
+    UNSPECIFIED = 0,
+
     Syntax,
     Binding,
     Typing,
-    Unspecified,
 };
 
 std::ostream& operator<<(std::ostream& os, DiagnosticCategory category);

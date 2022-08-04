@@ -131,9 +131,9 @@ DeclSummary& DeclSummary::withNameKind(SymbolNameKind nameK)
     return *this;
 }
 
-DeclSummary& DeclSummary::withTagKind(TagSymbolNameKind tagK)
+DeclSummary& DeclSummary::withTagChoice(TagSymbolName::TagChoice tagChoice)
 {
-    tagK_ = tagK;
+    tagChoice_ = tagChoice;
     return *this;
 }
 
@@ -141,12 +141,19 @@ Expectation::Expectation()
     : numE_(0)
     , numW_(0)
     , continueTestDespiteOfErrors_(false)
-    , isAmbiguous_(false)
+    , containsAmbiguity_(false)
+    , unfinishedParse_(false)
 {}
 
 Expectation &Expectation::ContinueTestDespiteOfErrors()
 {
     continueTestDespiteOfErrors_ = true;
+    return *this;
+}
+
+Expectation &Expectation::unfinishedParse()
+{
+    unfinishedParse_ = true;
     return *this;
 }
 
@@ -164,7 +171,7 @@ Expectation& Expectation::setWarnCnt(int numW)
 
 Expectation& Expectation::ambiguity(std::string s)
 {
-    isAmbiguous_ = true;
+    containsAmbiguity_ = true;
     ambiguityText_ = std::move(s);
     return *this;
 }

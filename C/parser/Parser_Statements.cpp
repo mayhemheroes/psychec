@@ -276,6 +276,8 @@ void Parser::maybeAmbiguateStatement(StatementSyntax*& stmt)
     auto declStmt = makeNode<DeclarationStatementSyntax>();
     declStmt->decl_ = varDecl;
     ambiStmt->declStmt_ = declStmt;
+
+    diagReporter_.AmbiguousExpressionOrDeclarationStatement();
 }
 
 /**
@@ -291,7 +293,7 @@ bool Parser::parseCompoundStatement_AtFirst(StatementSyntax*& stmt,
                   return false,
                   "assert failure: `{'");
 
-    DepthControl _(depthOfStmts_);
+    DepthControl _(DEPTH_OF_STMTS_);
 
     auto block = makeNode<CompoundStatementSyntax>();
     stmt = block;

@@ -39,9 +39,10 @@ namespace C {
  * This API is inspired by that of \c Microsoft.CodeAnalysis.SymbolKind
  * from Roslyn, the .NET Compiler Platform.
  */
-enum class SymbolKind : std::uint8_t
+enum class PSY_C_API SymbolKind : std::uint8_t
 {
     UNSPECIFIED = 0,
+
     Library,
     Function,
     Value,
