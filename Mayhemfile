@@ -1,5 +1,0 @@
-project: psychec
-target: cnip
-
-cmds:
-  - cmd: /cnip @@
