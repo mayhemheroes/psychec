@@ -1,0 +1,6 @@
+project: psychec
+target: fulldir
+
+cmds:
+  - cmd: /fuzz_fullDir
+    libfuzzer: true
