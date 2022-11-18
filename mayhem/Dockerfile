@@ -8,7 +8,7 @@ WORKDIR /repo/build
 RUN cmake ..
 RUN make -j8
 WORKDIR /repo
-RUN clang++ /repo/mayhem/fuzz.cpp utility/*.cpp tools/*.cpp -fsanitize=fuzzer -o /fuzz -Iutility/ -I.
+RUN clang++ /repo/mayhem/fuzz_fullDir.cpp utility/*.cpp tools/*.cpp -fsanitize=fuzzer -o /fuzz -Iutility/ -I.
 
 FROM ubuntu:22.04 as package
 COPY --from=builder /repo/build/cnip /
