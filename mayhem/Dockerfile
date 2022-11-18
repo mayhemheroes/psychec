@@ -14,5 +14,5 @@ FROM ubuntu:22.04 as package
 COPY --from=builder /repo/build/cnip /
 COPY --from=builder /repo/build/C/* /deps/
 COPY --from=builder /repo/build/common/* /deps/
-COPY --from=builder /fuzz /fuzz_fulldir
+COPY --from=builder /fuzz /fuzz_fullDir
 ENV LD_LIBRARY_PATH=/deps
