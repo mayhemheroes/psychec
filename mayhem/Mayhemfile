@@ -1,0 +1,7 @@
+project: psychec
+target: cnip
+
+cmds:
+  - cmd: /repo/out
+    libfuzzer: true
+image: ghcr.io/rnshah9/playground:psychec
