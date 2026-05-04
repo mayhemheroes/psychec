@@ -1,7 +1,9 @@
 FROM --platform=linux/amd64 ubuntu:22.04 as builder
 
-RUN apt-get -o Acquire::Retries=5 update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake clang
+# Replace Ubuntu mirrors with US mirrors to avoid sync issues with archive.ubuntu.com
+RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g; s|http://security.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake clang
 
 COPY . /repo
 WORKDIR /repo/build
